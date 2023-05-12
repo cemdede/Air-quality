@@ -1,0 +1,151 @@
+// Inland DHT11 Sensor (Temperature + Humidity) - Pin D4
+// Ikea Vindriktning Air Quality Sensor (PM1006K) (PM2.5 - PM10) - Pin D3
+// ESP8266 12-E NodeMCU Board
+
+
+#ifdef ENABLE_DEBUG
+  #define DEBUG_ESP_PORT Serial
+  #define NODEBUG_WEBSOCKETS
+  #define NDEBUG
+#endif
+
+#include <Arduino.h>
+#include <ESP8266WiFi.h>
+#include <DHT.h>
+#include "SinricPro.h"
+#include "SinricProAirQualitySensor.h"
+#include "SinricProTemperaturesensor.h"
+
+#define WIFI_SSID    "Your_Wifi_2.4G_Name"
+#define WIFI_PASS    "Your_Wifi_Password"
+#define APP_KEY      "SincirPro_App_Key"
+#define APP_SECRET   "SincirPro_App_Secret"
+#define PM_SENSOR_ID    "SincirPro_PM_SENSOR_ID"
+#define TEMP_SENSOR_ID    "SincirPro_TEMP_SENSOR_ID"
+#define BAUD_RATE    9600 
+#define EVENT_WAIT_TIME   60000             // Send event every 60 seconds
+
+// Air quality sensor event dispatch time. Min is every 120 seconds.
+// Max scale of particle is 500UL X 60 sec X 4 = Act every 2 min  
+#define MIN (500UL * 60 * 4) 
+unsigned long dispatchTime = millis() + MIN;
+
+#define DHT_PIN    2 //pin number for DHT11 sensor
+#define DHT_TYPE      DHT11   // DHT 11
+DHT dht(DHT_PIN, DHT_TYPE);
+
+bool deviceIsOn;                             
+float temperature;                           
+float humidity;                              
+float lastTemperature;                        
+float lastHumidity;                           
+unsigned long lastEvent = (-EVENT_WAIT_TIME); 
+
+bool onPowerState(const String &deviceId, bool &state) {
+  if (deviceId == TEMP_SENSOR_ID) {
+    Serial.println("TemperatureSensor turned " + String(state ? "on" : "off"));
+    deviceIsOn = state;
+    return true;
+  }
+  return false;
+}
+
+void handleTemperaturesensor() 
+{
+  if (!deviceIsOn) 
+    return; 
+
+  unsigned long actualMillis = millis();
+  
+  if (actualMillis - lastEvent < EVENT_WAIT_TIME) 
+    return; //only check every EVENT_WAIT_TIME milliseconds
+
+  temperature = dht.readTemperature();
+  humidity = dht.readHumidity();                          // get actual humidity
+
+  if (isnan(temperature) || isnan(humidity)) 
+  { 
+    // reading failed...
+    Serial.println("DHT reading failed");       // print error message
+    return;                                     // try again next time
+  }
+
+  // Check if any reads failed and exit early (to try again).
+  if (temperature == lastTemperature || humidity == lastHumidity) 
+    return; 
+
+  SinricProTemperaturesensor& mySensor = SinricPro[TEMP_SENSOR_ID];     // get temperaturesensor device
+  bool success = mySensor.sendTemperatureEvent(temperature, humidity);  // send event
+  
+  if (success) 
+  {  
+    // if event was sent successfuly, print temperature and humidity to serial
+    Serial.println("Temperature: " + String(temperature, 1) + " Celsius\tHumidity: " + String(humidity, 1) + " %");
+  } 
+  else 
+  {  
+    // if sending event failed, print error message
+    Serial.println("Something went wrong...Could not send Event to server!");
+  }
+  lastTemperature = temperature;  
+  lastHumidity = humidity;        
+  lastEvent = actualMillis;       
+}
+
+// setup function for WiFi connection
+void setupWiFi() {
+  Serial.println("\n[Wifi]: Connecting");
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(250);
+  }
+  Serial.println();
+  Serial.print("[WiFi]: IP-Address is ");
+  Serial.println(WiFi.localIP());
+}
+
+// setup function for SinricPro
+void setupSinricPro() {
+  // add device to SinricPro
+  SinricProAirQualitySensor& mySinricProAirQualitySensor = SinricPro[PM_SENSOR_ID];
+  SinricProTemperaturesensor& mySensor = SinricPro[TEMP_SENSOR_ID];
+
+  // setup SinricPro
+  SinricPro.onConnected([]() {
+    Serial.println("Connected to SinricPro");
+  });
+  SinricPro.onDisconnected([]() {
+    Serial.println("Disconnected from SinricPro");
+  });
+  SinricPro.begin(APP_KEY, APP_SECRET);
+  mySensor.onPowerState(onPowerState);
+}
+
+void setup() {
+  Serial.begin(BAUD_RATE);
+  while (!Serial);
+  Serial.println();
+  setupWiFi();
+  setupSinricPro();
+  dht.begin();
+}
+
+void loop() {
+  SinricPro.handle();
+  handleTemperaturesensor();
+
+  if ((long)(millis() - dispatchTime) >= 0) {
+    SinricProAirQualitySensor& mySinricProAirQualitySensor = SinricPro[PM_SENSOR_ID]; // get sensor device
+
+    int pm1 = random(0, 501);   
+    int pm2_5 = random(0, 501);  
+    int pm10 = random(0, 501);   
+
+    mySinricProAirQualitySensor.sendAirQualityEvent(pm1, pm2_5, pm10, "PERIODIC_POLL");
+    dispatchTime += MIN;
+    Serial.println("PM2.5: " + String(pm2_5) + " ug/m3\tPM10: " + String(pm10) + " ug/m3");
+    Serial.println("Sending Air Quality event...");
+  }
+}
