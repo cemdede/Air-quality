@@ -2,7 +2,9 @@
 ESP8266 12-E NodeMCU Kit + DHT11 + VINDRIKTNING Air quality pm1006K PMI 2.5 sensor
 
 // Inland DHT11 Sensor (Temperature + Humidity) - Pin D4
+
 // Ikea Vindriktning Air Quality Sensor (PM1006K) (PM2.5 - PM10) - Pin D3
+
 // ESP8266 12-E NodeMCU Board
 
 
