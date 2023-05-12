@@ -20,3 +20,5 @@ https://github.com/sinricpro/esp8266-esp32-sdk/blob/master/examples/AirQualitySe
 
 # PM100k sensor
 https://en.gassensor.com.cn/Product_files/Specifications/LED%20Particle%20Sensor%20PM1006K%20Specification.pdf
+
+<img width="1688" alt="Screenshot 2023-05-12 at 3 39 50 PM" src="https://github.com/cemdede/Air-quality/assets/14031604/a756ae9a-9d3e-413c-b112-bc9a024aa091">
