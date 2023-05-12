@@ -17,3 +17,6 @@ https://github.com/sinricpro/esp8266-esp32-sdk
 
 # Raw code for how to use SinricPro Air Quality Sensor device
 https://github.com/sinricpro/esp8266-esp32-sdk/blob/master/examples/AirQualitySensor/AirQualitySensor/AirQualitySensor.ino
+
+# PM100k sensor
+https://en.gassensor.com.cn/Product_files/Specifications/LED%20Particle%20Sensor%20PM1006K%20Specification.pdf
