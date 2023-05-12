@@ -10,3 +10,10 @@ ESP8266 12-E NodeMCU Kit + DHT11 + VINDRIKTNING Air quality pm1006K PMI 2.5 sens
 
 ![ESP8266-NodeMCU-kit-12-E-pinout-gpio-pin](https://github.com/cemdede/Air-quality/assets/14031604/34a9b40c-f285-4801-812c-c6b0c70e548b)
 ![aq-bands-ikea](https://github.com/cemdede/Air-quality/assets/14031604/e256cda1-6083-4e1b-9431-57d8508da724)
+
+#SinricPro (ESP8266 / ESP32 SDK)
+https://github.com/sinricpro/esp8266-esp32-sdk
+
+
+# Raw code for how to use SinricPro Air Quality Sensor device
+https://github.com/sinricpro/esp8266-esp32-sdk/blob/master/examples/AirQualitySensor/AirQualitySensor/AirQualitySensor.ino
